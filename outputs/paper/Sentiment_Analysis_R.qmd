@@ -1,0 +1,718 @@
+---
+title: "Sentiment Analysis of User Comments on Machine Learning Posts: A Data-driven Approach Using R"
+author: "Joseph Chung"
+date: today
+date-format: "MMM D, YYYY"
+format:
+  pdf:
+    documentclass: article
+    geometry: margin = 1in
+    abstract: In this study, we present a comprehensive data analysis paper that utilize a sentiment model in R to     analyze user comments from a dataset containing post_ids and comments related to the topic of Machine Learning.     We aim to investigate sentiment polarity of user comments and its distribution across different posts,     identifying trends and patterns that may provide valuable insights into the Machine Learning community's perception and engagement.
+    toc: true
+    number-sections: true
+    colorlinks: true
+    lof : true
+    lot : true
+thanks: "Code and data are available at: https://github.com/UtopianYoungChung/Sentiment-Analysis-Using-R.git"
+bibliography: bibliography.bib
+---
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+
+# Load required packages and read in the data
+#knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr) #data manipulation
+library(ggplot2) #visualizations
+library(gridExtra) #viewing multiple plots together
+library(tidyverse) #lexicon, sentiments
+library(stringr) #lexicon, sentiments
+library(tidytext) #text mining
+library(wordcloud2) #creative visualizations
+library(kableExtra)
+library(formattable)
+library(tidyr) #Spread, separate, unite, text mining
+library(widyr) #Use for pairwise correlation
+library(furrr)
+library(SnowballC)
+library(vctrs)
+library(slider)
+library(magrittr)
+library(purrr)
+library(lubridate)
+library(quanteda)
+library(stm)
+
+
+#Visualizations!
+library(ggplot2) #Visualizations (also included in the tidyverse package)
+library(ggrepel) #`geom_label_repel`
+library(gridExtra) #`grid.arrange()` for multi-graphs
+library(knitr) #Create nicely formatted output tables
+library(kableExtra) #Create nicely formatted output tables
+library(formattable) #For the color_tile function
+library(circlize) #Visualizations - chord diagram
+library(memery) #Memes - images with plots
+library(magick) #Memes - images with plots (image_read)
+library(yarrr)  #Pirate plot
+library(radarchart) #Visualizations
+library(igraph) #ngram network diagrams
+library(ggraph) #ngram network diagrams
+
+#Define some colors to use throughout
+my_colors <- c("#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#D55E00", "#D65E00")
+
+#Customize ggplot2's default theme settings
+theme_posts <- function(aticks = element_blank(),
+                        pgminor = element_blank(),
+                        lt = element_blank(),
+                        lp = "none")
+{
+  theme(plot.title = element_text(hjust = 0.5), #Center the title
+        axis.ticks = aticks, #Set axis ticks to on or off
+        panel.grid.minor = pgminor, #Turn the minor grid lines on or off
+        legend.title = lt, #Turn the legend title on or off
+        legend.position = lp) #Turn the legend on or off
+}
+
+#Customize the text tables for consistency using HTML formatting
+my_kable_styling <- function(dat, caption) {
+  kable(dat, "html", escape = FALSE, caption = caption) %>%
+    kable_styling(bootstrap_options = c("striped", "condensed", "bordered"),
+                  full_width = FALSE)
+}
+
+```
+
+# Introduction
+
+The rapid growth of online forums and communities discussing various topics, including Machine Learning(ML), has led to an abundance of user-generated content in the form of text data. Analyzing this data can reveal valuable insights into user perceptions, opinions, and sentiments toward specific subjects. Sentiment analysis, or opinion mining, is a natural language processing technique used to determine the sentiment expressed in a piece of text, such as positive, negative, or neutral. This paper focuses on employing sentiment analysis techniques to understand the sentiment polarity of user comments related to the topics of Machine Learning, Data Science, and Artificial Intelligence.
+
+## Background and motivation
+
+Machine Learning, Data Science, and Artificial Intelligence have become popular fields of study and research due to their vast applications in various industries. As a result, online communities have emerged where people discuss these topics, share knowledge, and express their opinions. Analyzing the sentiment of these users' comments can provide insights into the perception of the Data Science community, identify common issues or concerns, and uncover emerging trends. This understanding could be valuable for researchers, educators, and industry professionals who aim to improve their work based on community feedback.
+
+## Research questions
+
+This study aims to address the following research questions:
+
+1.  What is the overall sentiment polarity (positive, negative, or neutral) of user comments related to Machine Learning, Data Science, and Artificial Intelligence?
+
+2.  How is the sentiment polarity distributed across different posts in the dataset?
+
+3.  Are there any correlations between post attributes (e.g., post length, engagement) and sentiment polarity?
+
+4.  Can any trends or patterns in sentiment polarity be identified over time or in relation to specific subtopics within the topics of Machine Learning, Data Science, or Artificial Intelligence?
+
+## Scope and limitations
+
+The scope of this study is limited to the analysis of a dataset containing post \_ids and comments of the users related to the topics. The results and interpretations are based solely on the data provided and may not be generalizable to other online communities or topics. The sentiment analysis model employed in this study is subject to the limitations inherent in natural languages processing techniques, such as context ambiguity and handling of sarcasm or irony. Additionally, the study does not account for demographic information or biases present in the dataset, which could potentially influence the sentiment analysis results.
+
+# Literature Review
+
+## Sentiment analysis in online communities
+
+Over the past decade, sentiment analysis has become increasingly popular as a tool to mine user opinions and emotions from online platforms, such as social media, blogs, and forums [@citePang]. Numerous studies have focused on the application of sentiment analysis in various domains, such as politics [@citeTumasjan], finance [@citeBollen], and consumer reviews [@citeDave]. These studies demonstrate the potential of sentiment analysis as a valuable technique for understanding user-generated content and informing decision-making processes.
+
+## Sentiment analysis techniques in R
+
+R is a widely used programming language for statistical analysis and data visualization, with several libraries and packages available for natural language processing and sentiment analysis [@citeR]. Some of the most popular sentiment analysis packages in R include tidytext [@citeSilge], syuzhet [@citeJockers], and sentiment [@citeRinker]. These packages provide various algorithms and techniques for sentiment analysis, such as lexicon-based approaches, machine-learning models, and deep-learning methods. Researchers have employed these techniques to analyze sentiment in diverse contexts, ranging from Twitter data [@citeWijeratne] to news articles [@citeKearney]
+
+## Applications of sentiment analysis in Machine Learning research
+
+Sentiment analysis has been employed in Machine Learning research to understand user perceptions, opinions, and trends related to the field. For example, Aliza [@citeAliza] analyzed the sentiment of tweets related to Machine Learning conferences, revealing insights into the community's responses to specific presentations and events. In another study, Wang [@citeWang] investigated the sentiment of user comments on popular Machine Learning platforms, such as GitHub and Stack Overflow, to identify trends and patterns in the community's engagement with specific algorithms and techniques. These studies highlight the potential of sentiment analysis to uncover valuable insights into the Machine Learning community and inform future research directions.
+
+The literature demonstrates the growing interest in sentiment analysis as a valuable tool for understanding user-generated content in various domains. R has emerged as a popular platform for sentiment analysis due to its extensive libraries and packages. However, there remains a need for more comprehensive studies that investigate the sentiment of user comments related to Machine Learning, particularly in the context of online communities where users share their knowledge and opinions on the topic. This study aims to address this gap by employing sentiment analysis techniques in R to analyze a dataset of post IDs and comments related to Machine Learning on the Reddit platform.
+
+# Data Collection and Preprocessing
+
+This section describes the process of data collection, including web scraping and API requests, and the subsequent preprocessing steps applied to the dataset to prepare it for sentiment analysis.
+
+## Data Collection
+
+The dataset used in this study was collected from Reddit, a popular online platform where users can share and discuss a wide range of topics. The data was obtained by performing web scraping and API requests on the topics of Machine Learning, Data Science, and Artificial Intelligence posts between 2013 to 2023. The Reddit API (https://www.reddit.com/dev/api/) was utilized to access and retrieve relevant posts and associated comments from the specified subreddits (e.g., r/MachineLearning, r/datascience, r/artificial).
+
+To perform the web scraping and API requests, the Python package PRAW (Python Reddit API Wrapper) [@citePRAW] was used, which provides a convenient interface to interact with the Reddit API. The data collection process involved:
+
+1.  Authenticating with the Reddit API using a registered application's credentials.
+
+2.  Querying the API for posts related to the specified topics (Machine Learning, Data Science, and Artificial Intelligence) within the targeted subreddits.
+
+3.  Combining the collected data into a structured dataset for further analysis.
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+#| label: tbl-table1
+#| tbl-cap: 10 observations from dataset of Reddit API
+#Load in dataset
+reddit_orig <- read.csv(here::here("inputs/data/reddit.csv"))
+
+#Extracting random ten observations from the Reddit dataset
+reddit_orig %>%
+  slice_sample(n = 10) %>%
+  select(post_id, subreddit, category, score, created_year) %>%
+  kable("pipe", escape = FALSE, align = "c", caption = "10 observaions") %>%
+  kable_styling(bootstrap_options = 
+                  c("striped", "condensed", "bordered"), 
+                  full_width = FALSE)
+  
+```
+
+@tbl-table1 shows ten observations of the dataset, with 5 selected attributes of post_id, subreddit, category, score, and created_year. It contains 223,781 observations and 7 variables in total.
+
+## Data cleaning and preprocessing
+
+After obtaining the raw dataset, several preprocessing steps were performed to clean and prepare the data for sentiment analysis. These steps include:
+
+### Basic cleaning
+
+There are different methods we can use to condition the data, but this paper will stick to the basics and use gsub() and apply() functions to do the cleaning [@citeBecker].
+
+First, we got rid of those pesky contractions by creating a little function that handles most scenarios using gsub(), and then applied that function across all comments. Second, all those special characters that muddy the text were removed with gsub() function and a simple regular expression. Lastly, to be consistent, we converted everything to lowercase with tolower() [@citetolower] function.
+
+All the work was done on a separate R file called 02-data_preprocessing.R. It can be found in the 'script' folder.
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+
+#head(reddit)
+
+```
+
+### Text Mining
+
+Text mining and text analytics can be used interchangeably. The primary objective is to uncover significant data that may be concealed or unfamiliar beneath the surface. One of the techniques utilized in text mining is Natural Language Processing (NLP), which aims to unravel the intricacies in written language through various methods such as tokenization, clustering, entity extraction, and analyzing the relationships between words. Furthermore, NLP employs algorithms to detect patterns and quantify subjective data.
+
+### Tokenization
+
+To unnest the tokens, we use the tidytext library [@citetidytext]. From the tidy text framework, we broke the text into individual tokens and transform it into a tidy data structure. To do this, we used tidytext's unnest_tokens() function. unnest_tokens() requires at least two arguments: the output column name that will be created as the text is unnested into it ("word," in this case) and the input column that holds the current text (i.e. comments). We then took the Reddit dataset and pipe it into unnest_tokens() and then removed stop words. There are different lists to choose from, but here we used the lexicon called stop_words from the tidytext package.
+
+After the tokenization, we used dplyr's anti_join() [@citeDplyr] to remove stop words. Then we used distinct() to get rid of any duplicate records as well. Lastly, we examined the class and dimensions of our new tidy data structure:
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+#unnest and remove stop, and short words
+
+reddit <- read.csv(here::here("inputs/data/reddit.csv"))
+
+reddit_comments_filtered <- reddit %>%
+  unnest_tokens(word, comment) %>%
+  anti_join(stop_words) %>%
+  distinct() %>%
+  filter(nchar(word) > 3) %>% # remove words with characters less than 3
+  filter(!grepl('[0-9]', word)) # remove number
+
+
+class(reddit_comments_filtered)
+dim(reddit_comments_filtered)
+```
+
+reddit_comments_filtered is a data frame with 2914188 total words (not unique words) and 8 columns. The following is the snapshot:
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+#| label: tbl-table2
+#| tbl-cap: Tokenized Format
+
+reddit_comments_filtered %>%
+  filter(word == "deepmind") %>%
+  select(word, post_id, subreddit, score, years) %>%
+  arrange() %>%
+  distinct() %>%
+  top_n(10, post_id) %>%
+  mutate(post_id = color_tile("lightblue","lightblue")(post_id)) %>%
+  mutate(word = color_tile("lightgreen","lightgreen")(word)) %>%
+  kable("simple", escape = FALSE, align = "c", caption = "Tokenized Format Example") %>%
+  kable_styling(bootstrap_options = 
+                  c("striped", "condensed", "bordered"), 
+                  full_width = FALSE)
+```
+
+@tbl-table2 shows us the tokenized, unsummarized, tidy data structure.
+
+# Descriptive Statistics
+
+During this section, we will be using creative graphs from the ggplot2 [@citeggplot2], circlize [@citecirclize], and yarrr [@citeyarrr] packages.
+
+## Shipshape: Word Count Per Post
+
+The term "shipshape" is commonly used to indicate that everything is well-organized, neat, and tidy. In this context, an interesting perspective is presented on the orderly and organized data that demonstrates the lexical diversity, or the range of vocabulary, found within post comments over time. The pirate plot, a sophisticated technique for graphing a continuous dependent variable (such as word count) against a categorical independent variable (such as 'year'), is utilized to create a comprehensive and informative visual representation that incorporates both raw data points and statistical analysis.
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+#| label: fig-graph1
+#| fig-cap: Lexical Diversity over the past 10 years, between '13 and '23
+word_summary <- reddit_comments_filtered %>%
+  group_by(years, post_id) %>%
+  mutate(word_count = n_distinct(word)) %>%
+  select(Years = years, Post = post_id, subreddit, word_count) %>%
+  distinct() %>% #To obtain one record per post
+  ungroup()
+
+pirateplot(formula =  word_count ~ Years + subreddit, #Formula
+   data = word_summary, #Data frame
+   xlab = NULL, ylab = "Post Distinct Word Count", #Axis labels
+   main = "Lexical Diversity between Year 2013 and 2023", #Plot title
+   pal = "google", #Color scheme
+   point.o = .2, #Points
+   avg.line.o = 1, #Turn on the Average/Mean line
+   theme = 0, #Theme
+   point.pch = 16, #Point `pch` type
+   point.cex = 1.5, #Point size
+   jitter.val = .1, #Turn on jitter to see the songs better
+   cex.lab = .9, cex.names = .7) #Axis label size
+
+
+```
+
+In this pirate plot displayed in figure @fig-graph1, each colored circle symbolizes a post. The dense clusters within each category indicate a considerable volume of posts in the dataset. Upon observation, it becomes evident that there were only a few posts during the period of '13-15 across all topics, whereas from '16-18 onwards, there was a surge in post activity. Additionally, it is worth noting that there is a slight upward trend in the number of distinct words per post in the Machine Learning topic. The solid horizontal line represents the mean word count for the corresponding years.
+
+# Assumption Checking and Methods
+
+## All Year Round: Post Count Per Year
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+#| label: fig-bar2
+#| fig-cap: The total amount of posts on Reddit platform between Year '13 and '23
+
+
+posts_year <- reddit_comments_filtered %>%
+  select(category, created_year) %>%
+  distinct() %>%
+  group_by(created_year) %>%
+  summarise(post_count = n())
+
+id <- seq_len(nrow(posts_year))
+posts_year <- cbind(posts_year, id)
+label_data = posts_year
+number_of_bar = nrow(label_data) #Calculate the ANGLE of the labels
+angle = 90 - 360 * (label_data$id - 0.5) / number_of_bar #Center things
+label_data$hjust <- ifelse(angle < -90, 1, 0) #Align label
+label_data$angle <- ifelse(angle < -90, angle + 180, angle) #Flip angle
+ggplot(posts_year, aes(x = as.factor(id), y = post_count)) +
+  geom_bar(stat = "identity", fill = alpha("purple", 0.7)) +
+  geom_text(data = label_data, aes(x = id, y = post_count + 10, label = created_year, hjust = hjust), color = "black", alpha = 0.6, size = 3, angle =  label_data$angle, inherit.aes = FALSE ) +
+  coord_polar(start = 0) +
+  ylim(-20, 150) + #Size of the circle
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        plot.margin = unit(rep(-6,6), "in"),
+        plot.title = element_text(margin = margin(t = 10, b = -10)))
+
+
+```
+
+@fig-bar2 depicts the total number of posts in the areas of 'Machine Learning', 'Artificial Intelligence', and 'Data Science' from 2019 to 2022. During this time, there were many advancements in artificial intelligence, including the development of ChatGPT and other important breakthroughs. Now that we are in 2023, the number of posts has already grown a lot compared to previous years. This suggests that people are more active in these topics than they were in the last 10 years.
+
+## Chords: Subreddit posts by Years
+
+```{r}
+#| messages: false
+#| echo: false
+#| warning: false
+#| label: fig-bar3
+#| fig-cap: Relathiopship between Subreddit posts and timeline in semi-annual frames
+
+
+years_subreddit <-  reddit_comments_filtered %>%
+  filter(years != "NA") %>% #Remove songs without release dates
+  count(years, subreddit)  #Get SONG count per chart level per decade. Order determines top or bottom.
+
+circos.clear() #Very important - Reset the circular layout parameters!
+grid.col = c("13-15" = my_colors[1], "16-18" = my_colors[2], "19-21" = my_colors[3], "22-23" = my_colors[4], "Subreddit" = "grey", "Uncharted" = "grey") #assign chord colors
+# Set the global parameters for the circular layout. Specifically the gap size
+circos.par(gap.after = c(rep(5, length(unique(years_subreddit[[1]])) - 1), 15,
+                         rep(5, length(unique(years_subreddit[[2]])) - 1), 15))
+
+chordDiagram(years_subreddit, grid.col = grid.col, transparency = .2)
+title("Relationship Between Subreddit and Timeline")
+
+
+```
+
+As shown above in @fig-bar3, the subject Machine Learning is expereienced significant growth between 2019 and 2021, and this trend has persisted into 2023.
+
+## Sentiment analysis model selection
+
+### Explore sentiment lexicons
+
+The tidytext [@citetidy] package includes a dataset called sentiments [@citesentiments] which provides several distinct lexicons. These lexicons are dictionaries of words with an assigned sentiment category or value. Tidytext provides three general purposes lexicons:
+
+-   AFINN: assigns words with a score that runs between -5 and 5, with negative scores indicating negative sentiment and positive scores indicating positive sentiment
+
+-   Bing: assigns words into positive and negative categories
+
+-   NRC: assigns words into one or more of the following ten categories: positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust
+
+In order to examine the lexicons, we create a data frames.
+
+#### Create sentiment datasets
+
+Start off by creating Post sentiment datasets for each of the lexicons by performing an inner_join() on the get_sentiments() function. We pass the name of the lexicon for each call. For this paper, we use Bing for binary and NRC for categorical sentiments. Since words can appear in multiple categories in NRC, such as Negative/Fear or Positive/Joy, we will also create a subset without the positive and negative categories to use later on. Refer to 03-simulation.R
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#### Create sentiment datasets
+post_bing <- reddit_comments_filtered %>%
+  inner_join(get_sentiments("bing"))
+
+post_nrc <- reddit_comments_filtered %>%
+  inner_join(get_sentiments("nrc"))
+
+post_nrc_sub <- reddit_comments_filtered %>%
+  inner_join(get_sentiments("nrc")) %>%
+  filter(!sentiment %in% c("positive", "negative"))
+
+```
+
+#### Mood changes over time
+
+Since we are looking at sentiment from a polarirty perspective, we might want to see whether or not it changes over time. We use geom_smooth() [@citeggplot2] with loess method for a smooth curve and another geom_smooth() with method=lm for a linear smooth curve.
+
+```{r}
+#| warning: false
+#| echo: false
+#| message: false
+#| label: fig-bar4
+#| fig-cap: Sentiment ploarity over time and Percet postivie over time are descreasing
+
+
+post_polarity_year <- post_bing %>%
+  count(sentiment, created_year) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(polarity = positive - negative,
+    percent_positive = positive / (positive + negative) * 100)
+
+polarity_over_time <- post_polarity_year %>%
+  ggplot(aes(created_year, polarity, color = ifelse(polarity >= 0,my_colors[5],my_colors[4]))) +
+  geom_col() +
+  geom_smooth(method = "loess", se = FALSE) +
+  geom_smooth(method = "lm", se = FALSE, aes(color = my_colors[1])) +
+  theme_posts() + theme(plot.title = element_text(size = 11)) +
+  xlab(NULL) + ylab(NULL) +
+  ggtitle("Polarity Over Time")
+
+relative_polarity_over_time <- post_polarity_year %>%
+  ggplot(aes(created_year, percent_positive , color = ifelse(polarity >= 0,my_colors[5],my_colors[4]))) +
+  geom_col() +
+  geom_smooth(method = "loess", se = FALSE) +
+  geom_smooth(method = "lm", se = FALSE, aes(color = my_colors[1])) +
+  theme_posts() + theme(plot.title = element_text(size = 11)) +
+  xlab(NULL) + ylab(NULL) +
+  ggtitle("Percent Positive Over Time")
+
+grid.arrange(polarity_over_time, relative_polarity_over_time, ncol = 2)
+
+
+```
+
+@fig-bar4 shows that the overall polarity trend over time is negative in both cases.
+
+#### Sentiment in Machine Learning
+
+Let's take a deeper look into the mood of a specific topic over time: Machine Learning
+
+How would NRC model interpret the mood of posts under Machine Learning?
+
+```{r}
+#| message: false
+#| warning: false
+#| echo: false
+#| label: fig-bar5
+#| fig-cap: The interpretation of NRC model in mood of posts under Machine Learning
+
+post_nrc %>%
+  filter(subreddit %in% "MachineLearning") %>%
+  filter(category %in% "Discussion") %>%
+  filter(years %in% "19-21") %>%
+  group_by(sentiment) %>%
+  summarise(word_count = n()) %>%
+  ungroup() %>%
+  mutate(sentiment = reorder(sentiment, word_count)) %>%
+  ggplot(aes(sentiment, word_count, fill = -word_count)) +
+  geom_col() +
+  guides(fill = FALSE) +
+  theme_minimal() + theme_posts() +
+  labs(x = NULL, y = "Word Count") +
+  ggtitle("Machine Learning NRC Sentiment") +
+  coord_flip()
+
+```
+
+Although highly subjective, the results in @fig-bar5 appear to confirm that there is overwhelmingly positive and trust sentiment with Machine Learning. Let's go further in depth by looking at the sentiment categories with distinctive topics ('Career' and 'discussion') and see if they appear to be correlated.
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| label: fig-bar6
+#| fig-cap: NRC sentiment showing the level of anticipation is increasing over time, under 'Career'
+
+post_nrc_sub %>%
+  filter(category %in% c("Career")) %>%
+  count(category, sentiment, created_year) %>%
+  mutate(sentiment = reorder(sentiment, n), category = reorder(category, n)) %>%
+  ggplot(aes(sentiment, n, fill = sentiment)) +
+  geom_col() +
+  facet_wrap(created_year ~ category, scales = "free_x", labeller = label_both) +
+  theme_posts() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_blank()) +
+  labs(x = NULL, y = NULL) +
+  ggtitle("NRC Sentiment Subreddit Analysis") +
+  coord_flip()
+
+
+```
+
+Sub-NRC sentiments, @fig-bar6, show that anticipation is increasing under career category over time. Does this tell us that people are worrying about their jobs?
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| label: fig-bar7
+#| fig-cap: NRC sentiment showing the level of anticipation increasing over time, under 'Disscussion'
+
+post_nrc_sub %>%
+  filter(category %in% c("Discussion")) %>%
+  count(category, sentiment, created_year) %>%
+  mutate(sentiment = reorder(sentiment, n), category = reorder(category, n)) %>%
+  ggplot(aes(sentiment, n, fill = sentiment)) +
+  geom_col() +
+  facet_wrap(created_year ~ category, scales = "free_x", labeller = label_both) +
+  theme_posts() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_blank()) +
+  labs(x = NULL, y = NULL) +
+  ggtitle("NRC Sentiment Subreddit Analysis") +
+  coord_flip()
+
+```
+
+Sub-NRC sentiments, @fig-bar7, show "anticipation" is also increasing under "discussion' category. Here, interesting fact we can notice is the polarity between trust and anticipation is decreasing as we have witnessed above.
+
+## Model training and validation
+
+### World embeddings
+
+Word embeddings are a way to represent text data as vectors of numbers based on a huge corpus of text, capturing semantic meaning from words' context. First, let's filter out words that are used only rarely in this data set and create a nested dataframe, with one row per post.
+
+Next, we create a slide_windows() function, using the slide() function from the slider package [@citeslider]. This new function identifies skipgram windows in order to calculate the skipgram probabilities, how often we find each word near each other word.
+
+Now we can find all the skipgram windows, let's calculate how often words occurs on their own, and how often words occur together with other words. We do this using the point-wise mutual information (PMI).
+
+In statistics, probability theory and information theory, pointwise mutual information (PMI), or point mutual information, is a measure of association. It compares the probability of two events occurring together to what this probability would be if the events were independent.
+
+$$pmi(x;y) \equiv \log_2 \frac{p(x,y)}{p(x)p(y)} = \log_2 \frac{p(x|y)}{p(x)}=\log_2 \frac{p(y|x)}{p(y)}$$
+
+It's the logarithm of the probability of finding two words together, normalized for the probability of finding each of the words alone. We use PMI to measure which words occur together more often than expected based on how often they occurred on their own. This step is the computationally expensive part of finding word embeddings. However, by using furrr package [@citefurrr], we can take advantage of parallel processing because identifying skipgram windows in one document is independent from all the other documents.
+
+When PMI is high, the two words are associated with each other, i.e., likely to occur together. When PMI is low, the two words are not associated with each other, unlikely to occur together.
+
+We then determine the word vectors from the PMI values using singular value decomposition (SVD). SVD is a method for dimensionality reduction via matrix factorization [@citeGolub] that works by taking our data and decomposing it onto special orthogonal axes.
+
+In our application, we will use SVD to factor the PMI matrix into a set of smaller matrices containing the word embeddings with a size we get to choose. We will be using the widely_svd() function in widyr [@citewidyr], creating 100-dimensional word embeddings.
+
+We now have our reddit word embeddings.
+
+## Exploring reddit word embeddings
+
+Now that we have determined word embeddings for the data set of Reddit posts, let's explore them and discuss how they are used in modeling.
+
+Each word can be represented as a numeric vector in the new set of 100-dimensional feature space. A single word is mapped to only one vector, therefore, all sense of a word are conflated in word embeddings. Because of this, word embeddings are limited for understanding lexical semantics.
+
+In order to find out which words are close to each other, we created a simple function that will find the nearest words to any given example in using our newly created word embeddings (the code can be found under 03-simulation.R). This function takes the tidy word embeddings as input, along with a word/token as a string. Let's explore what words are closest to "slave" in the data set of reddit posts, as determined by our word embeddings.
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+# Word Embedding
+tidy_reddit <- reddit %>%
+  select(post_id, comment) %>%
+  unnest_tokens(word, comment) %>%
+  anti_join(stop_words) %>%
+  distinct() %>%
+  filter(nchar(word) > 3) %>% # remove words with characters less than 3
+  filter(!grepl('[0-9]', word)) %>% # remove numbers
+  add_count(word) %>%
+  filter(n >= 50) %>%
+  select(-n)
+
+nested_words <- tidy_reddit %>%
+  nest(words = c(word))
+
+# slide windows
+slide_windows <- function(tbl, window_size) {
+  skipgrams <- slider::slide(
+    tbl, 
+    ~.x, 
+    .after = window_size - 1, 
+    .step = 1, 
+    .complete = TRUE
+  )
+  
+  safe_mutate <- safely(mutate)
+  
+  out <- map2(skipgrams,
+              1:length(skipgrams),
+              ~ safe_mutate(.x, window_id = .y))
+  
+  out %>%
+    transpose() %>%
+    pluck("result") %>%
+    compact() %>%
+    bind_rows()
+}
+
+# PMI
+plan(multisession)  ## for parallel processing
+
+tidy_pmi <- nested_words %>%
+  mutate(words = future_map(words, slide_windows, 4L)) %>%
+  unnest(words) %>%
+  unite(window_id, post_id, window_id) %>%
+  pairwise_pmi(word, window_id)
+
+# Tidyword vectors
+tidy_word_vectors <- tidy_pmi %>%
+  widely_svd(
+    item1, item2, pmi,
+    nv = 100, maxit = 1000
+  )
+
+
+# Tidyword vectors
+tidy_word_vectors <- tidy_pmi %>%
+  widely_svd(
+    item1, item2, pmi,
+    nv = 100, maxit = 1000
+  )
+
+# Function for...
+nearest_neighbors <- function(df, token) {
+  df %>%
+    widely(
+      ~ {
+        y <- .[rep(token, nrow(.)), ]
+        res <- rowSums(. * y) / 
+          (sqrt(rowSums(. ^ 2)) * sqrt(sum(.[token, ] ^ 2)))
+        
+        matrix(res, ncol = 1, dimnames = list(x = names(res)))
+      },
+      sort = TRUE
+    )(item1, dimension, value) %>%
+    select(-item2)
+}
+
+tidy_word_vectors %>%
+  nearest_neighbors("machinelearning")
+
+```
+
+Since we have found word embeddings via singular value decomposition, we can use these vectors to understand what principal components explain the most variation in the Reddit posts.
+
+In linear algebra, the singular value decomposition (SVD) is a factroziation of a real or complex matrix. It generalizes the eigendecomposition of a square normal matrix with an orthonormal eigenbasis to any $m \times n$ matrix. It is related to the polar decomposition. Specificially, the singular value decomposition of an $m \times n$ complex matrix is factorization of the form: $$ M=U\Sigma V $$ , where U is an $m \times m$ complex unitary maxtrix, \$ \Sigma \$ is an \$ m \times n \$ rectangular diagonal matrix with non-negative real numbers on the diagonal, V is an \$ n \times n \$ complex unitary matrix, and V\* is the conjugate transpose of V. Such decomposition always exists for any complex matrix. If M is real, then U and V can be guanranteed to be real orthogonal matrices; in such contexts, the SVD is often denoted: $$ U \Sigma V^T $$ The orthogonal axes that svd used to represent our data were chosen so that the first axis accounts for the most variance, the second axis accounts for the next most variance, and so on. We can now explore which and how much each original tokens contributed to each of the resulting principal components produced using SVD.
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| label: fig-bar8
+#| tbl-cap: The produced principal components using SVD show tops words being used in the posts 
+
+tidy_word_vectors %>%
+  filter(dimension <= 8) %>%
+  group_by(dimension) %>%
+  top_n(12, abs(value)) %>%
+  ungroup() %>%
+  mutate(item1 = reorder_within(item1, value, dimension)) %>%
+  ggplot(aes(item1, value, fill = dimension)) +
+  geom_col(alpha = 0.4, show.legend = FALSE) +
+  facet_wrap(~dimension, scales = "free_y", ncol = 4) +
+  scale_x_reordered() +
+  coord_flip() +
+  labs(
+    x = NULL,
+    y = "Value",
+    title = "First 8 principal components for text of Reddit post",
+    subtitle = paste("Top words contributing to the components that explain",
+                     "the most variation")
+  )
+
+```
+
+Reserved.
+
+At this point we can use stm() from stm[@citestm] to implement an LDA model.
+
+## Evaluation metrics
+
+place holder
+
+# Results
+
+place holder
+
+## Sentiment polarity distribution
+
+place holder
+
+## Correlation between post attributes and sentiment
+
+place holder
+
+## Identification of trends and patterns
+
+place holder
+
+## Comparison with previous studies
+
+place holder
+
+# Discussion
+
+place holder
+
+## Interpretation of results
+
+place holder
+
+## Implications for Machine Learning community
+
+place holder
+
+## Limitations of the study
+
+place holder
+
+## Future research directions
+
+place holder
+
+# Conclusion
+
+place holder
+
+# References
