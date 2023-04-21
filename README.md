@@ -15,10 +15,10 @@ Coding was done on Quarto. Quarto made it simple to use compared to R Markdown. 
 
 The raw data set was obtained from Reddit API using scraping technique with Python Reddit API Wrapper package. However, due to their size, the datasets were not able to download onto github; hence, seperate links are provided for those who want to simulate the paper for themselves:
 
-https://drive.google.com/drive/folders/1R1k7uMQeax0MxpkCrzc3YiD_v43ac_qi?usp=sharing
+- [Dataset](https://drive.google.com/drive/folders/1R1k7uMQeax0MxpkCrzc3YiD_v43ac_qi?usp=sharing)
 
 ### Paper
 
--   [/outputs/paper/](https://github.com/UtopianYoungChung/Homicides-in-Toronto/tree/main/outputs/paper) contains 'bib' extension file (bibliography), pdf (Report paper), qmd (Main Quarto)
+-   [/outputs/paper/](https://github.com/UtopianYoungChung/Sentiment-Analysis-Using-R/tree/main/outputs/paper) contains 'bib' extension file (bibliography), pdf (Report paper), qmd (Main Quarto)
 
--   [/scripts/](https://github.com/UtopianYoungChung/Homicides-in-Toronto/tree/main/scripts) contains 'R' extension files (00-download_data, 00-simulation)
+-   [/scripts/](https://github.com/UtopianYoungChung/Sentiment-Analysis-Using-R/tree/main/scripts) contains 'R' extension files (00-download_data, 00-simulation)
