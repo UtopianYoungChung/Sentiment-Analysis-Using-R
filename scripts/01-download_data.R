@@ -4,19 +4,10 @@
 # Data: 07 April 2023
 # Contact: yj.chung@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: 
-# - Need to have installed the tidyverse, haven and tidyr packages. 
 
+#Read in the data
+reddit_orig <- read.csv("inputs/data/DS_ML_AI_posts.csv", stringsAsFactors = FALSE)
 
-
-#### Workspace setup ####
-
-library(haven)
-library(tidyverse)
-
-# Reading in the data
-posts = read_csv(here::here("inputs/data/DS_ML_AI_posts.csv"))
-comments = read_csv(here::here("inputs/data/DS_ML_AI_comments.csv"))
-
-# Create datasets from csv files
-write_csv(x = posts, file = here::here("inputs/data/posts.csv"))
+#Select only what we want
+reddit <- reddit_orig %>%
+  select(post_id, subreddit, category = link_flair_text, score, created_year, comment)
