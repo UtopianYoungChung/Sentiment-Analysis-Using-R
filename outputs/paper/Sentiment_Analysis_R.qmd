@@ -289,6 +289,8 @@ The term "shipshape" is commonly used to indicate that everything is well-organi
 #| echo: false
 #| warning: false
 #| label: fig-graph1
+#| fig.width: 5
+#| figh.height: 5
 #| fig-cap: Lexical Diversity over the past 10 years, between '13 and '23
 word_summary <- reddit_comments_filtered %>%
   group_by(years, post_id) %>%
@@ -355,7 +357,7 @@ ggplot(posts_year, aes(x = as.factor(id), y = post_count)) +
 
 ```
 
-@fig-bar2 depicts the total number of posts in the areas of 'Machine Learning', 'Artificial Intelligence', and 'Data Science' from 2019 to 2022. During this time, there were many advancements in artificial intelligence, including the development of Stable Diffusion (2022), DALL-E (2021) ChatGPT (2022) and other important breakthroughs. Now that we are in 2023, the number of posts has already grown a lot compared to previous years. This suggests that people are more active in these topics than they were in the last 10 years. \newpage
+@fig-bar2 depicts the total number of posts in the areas of 'Machine Learning', 'Artificial Intelligence', and 'Data Science' from 2013 to 2022. During this time, there were many advancements in artificial intelligence, including the development of Stable Diffusion (2022), DALL-E (2021) ChatGPT (2022) and other important breakthroughs. Now that we are in 2023, the number of posts has already grown a lot compared to previous years. This suggests that people are more active in these topics than they were in the last 10 years. \newpage
 
 ### Chords: Subreddit posts by Years
 
@@ -364,7 +366,7 @@ ggplot(posts_year, aes(x = as.factor(id), y = post_count)) +
 #| echo: false
 #| warning: false
 #| label: fig-bar3
-#| fig-cap: Relathiopship between Subreddit posts and timeline in semi-annual frames
+#| fig-cap: Relationship between Subreddit posts and timeline in semi-annual frames
 
 
 years_subreddit <-  reddit_comments_filtered %>%
@@ -401,7 +403,7 @@ In order to examine the lexicons, we create a data frames. \newpage
 
 #### Create sentiment datasets
 
-Start off by creating Post sentiment datasets for each of the lexicons by performing an inner_join() on the get_sentiments() function. We pass the name of the lexicon for each call. For this paper, we use Bing for binary and NRC for categorical sentiments. Since words can appear in multiple categories in NRC, such as Negative/Fear or Positive/Joy, we will also create a subset without the positive and negative categories to use later on. Refer to 03-simulation.R
+Start off by creating Post sentiment datasets for each of the lexicons by performing an inner_join() on the get_sentiments() function. We pass the name of the lexicon for each call. For this paper, we use Bing for binary and NRC for categorical sentiments. Since words can appear in multiple categories in NRC, such as Negative/Fear or Positive/Joy, we will also create a subset without the positive and negative categories to use later on.
 
 ```{r}
 #| message: false
@@ -474,7 +476,7 @@ How would NRC model interpret the mood of posts under Machine Learning? \newpage
 #| warning: false
 #| echo: false
 #| label: fig-bar5
-#| fig-cap: The interpretation of NRC model in mood of posts under Machine Learning
+#| fig-cap: The interpretation of NRC model in mood of posts under discussion of Machine Learning in year '19-21 
 
 post_nrc %>%
   filter(subreddit %in% "MachineLearning") %>%
@@ -672,7 +674,7 @@ tidy_word_vectors %>%
 
 Since we have found word embeddings via singular value decomposition, we can use these vectors to understand what principal components explain the most variation in the Reddit posts.
 
-In linear algebra, the singular value decomposition (SVD) is a factorization of a real or complex matrix [@citeSVD]. It generalizes the eigendecomposition of a square normal matrix with an orthonormal eigenbasis to any $m \times n$ matrix. It is related to polar decomposition. Specifically, the singular value decomposition of an $m \times n$ complex matrix is the factorization of the form: $$ M=U\Sigma V $$ , where U is an $m \times m$ complex unitary matrix, \$ \Sigma \$ is an \$ m \times n \$ rectangular diagonal matrix with non-negative real numbers on the diagonal, V is an \$ n \times n \$ complex unitary matrix, and V\* is the conjugate transpose of V. Such decomposition always exists for any complex matrix. If M is real, then U and V can be guaranteed to be real orthogonal matrices; in such contexts, the SVD is often denoted: $$ U \Sigma V^T $$ The orthogonal axes that svd used to represent our data were chosen so that the first axis accounts for the most variance, the second axis accounts for the next most variance, and so on. We can now explore which and how much each original tokens contributed to each of the resulting principal components produced using SVD.
+In linear algebra, the singular value decomposition (SVD) is a factorization of a real or complex matrix [@citeSVD]. It generalizes the eigendecomposition of a square normal matrix with an orthonormal eigenbasis to any $m \times n$ matrix. It is related to polar decomposition. Specifically, the singular value decomposition of an $m \times n$ complex matrix is the factorization of the form: $$ M=U\Sigma V $$ , where U is an $m \times m$ complex unitary matrix, \Sigma is an m \times n rectangular diagonal matrix with non-negative real numbers on the diagonal, V is an n \times n  complex unitary matrix, and V\* is the conjugate transpose of V. Such decomposition always exists for any complex matrix. If M is real, then U and V can be guaranteed to be real orthogonal matrices; in such contexts, the SVD is often denoted: $$ U \Sigma V^T $$ The orthogonal axes that svd used to represent our data were chosen so that the first axis accounts for the most variance, the second axis accounts for the next most variance, and so on. We can now explore which and how much each original tokens contributed to each of the resulting principal components produced using SVD.
 
 ```{r}
 #| message: false
@@ -710,7 +712,7 @@ tidy_word_vectors %>%
 
 ## LDA Model: 'Text as Data'
 
-Latent Dirichlet Allocation (LDA) is a generative probabilistic model used in natural language processing and text analysis for uncovering hidden topics in a collection of documents. Introduced by David Blei, Andrew Ng, and Michael I. Jordan in 2003, LDA is a type of unsupervised machine learning algorithm that helps identify underlying structures in the data without any prior information about the documents' content \[@citeLDA}.
+Latent Dirichlet Allocation (LDA) is a generative probabilistic model used in natural language processing and text analysis for uncovering hidden topics in a collection of documents. Introduced by David Blei, Andrew Ng, and Michael I. Jordan in 2003, LDA is a type of unsupervised machine learning algorithm that helps identify underlying structures in the data without any prior information about the documents' content \[@citeLDA].
 
 LDA is based on the assumption that documents are composed of a mixture of topics, and each topic is a probability distribution over a fixed vocabulary. In other words, LDA assumes that the words in a document are generated by a combination of latent topics, where each topic is represented by a distribution of words. The aim of LDA is to learn the latent topics and their distribution across documents.
 
@@ -815,15 +817,15 @@ The implications for the Machine Learning community based on the analysis are as
 
 There are several possible limitations of the study that should be considered:
 
-1.  Data source: The study may have relied on data from a single platform or a limited number of sources. This could result in a biased representation of the Machine Learning community and its discussions. Including data from a wider range of sources and platforms could provide a more comprehensive view.
+1.  Data source: The study has relied on data from a single platform or a limited number of sources. This could result in a biased representation of the Machine Learning community and its discussions. Including data from a wider range of sources and platforms could provide a more comprehensive view.
 
-2.  Temporal limitations: The study's data may only cover a specific period, potentially missing out on more recent developments or trends in the Machine Learning community. Continuous updates to the data and analysis would be necessary to maintain relevance and accuracy.
+2.  Temporal limitations: The study's data only covered a specific period, potentially it will miss out on more recent developments or trends in the Machine Learning community. Continuous updates to the data and analysis would be necessary to maintain relevance and accuracy.
 
 3.  Sentiment analysis limitations: Sentiment analysis is often based on algorithms that may not accurately capture the nuances and complexities of human emotions and language. Sarcasm, irony, and context can be challenging for these algorithms to interpret, which could result in misclassification of sentiment.
 
 4.  Topic modeling limitations: The study's topic modeling approach might not perfectly capture the underlying themes and topics discussed within the community. The choice of parameters, the number of topics, and the algorithm itself could influence the results, leading to a different representation of the data.
 
-5.  Limited scope: The study might focus on a specific aspect of Machine Learning, Artificial Intelligence, or Data Science, potentially overlooking other important factors or areas of interest. A broader scope could provide a more comprehensive understanding of the community and its discussions.
+5.  Limited scope: The study might have focused on a specific aspect of Machine Learning, Artificial Intelligence, or Data Science, potentially overlooking other important factors or areas of interest. A broader scope could provide a more comprehensive understanding of the community and its discussions.
 
 6.  Generalizability: The findings of the study might not be generalizable to other communities or fields. Differences in culture, language, and context could limit the applicability of the results to other areas.
 
