@@ -1,4 +1,4 @@
-# Sentiment Analysis Using R
+
 <!-- -*- mode: gfm -*- -->
 
 # Sentiment Analysis Using R
